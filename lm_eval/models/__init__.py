@@ -13,6 +13,7 @@ MODEL_REGISTRY = {
     "gpt3": gpt3.GPT3LM,
     "textsynth": textsynth.TextSynthLM,
     "dummy": dummy.DummyLM,
+    "llama-cpp": gpt2.LlamaCPPLM
 }
 
 
