@@ -47,7 +47,8 @@ class HFLM(BaseLM):
         ).to(self.device)
         self.gpt2.eval()
 
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
+        # AutoTokenizer seems loading very slow
+        self.tokenizer = transformers.LlamaTokenizer.from_pretrained(
             pretrained if tokenizer is None else tokenizer,
             revision=revision,
             trust_remote_code=trust_remote_code,
@@ -150,8 +151,8 @@ class LlamaCPPLM(BaseLM):
         from llama_cpp import Llama
         # TODO: config n_ctx and n_batch
         self.model = Llama(model_path=pretrained, logits_all=True,
-                           n_ctx=2048, n_batch=2048,
-                           n_threads=int(os.environ.get("OMP_NUM_THREADS", multiprocessing.cpu_count())))
+                           n_ctx=2048,  # n_batch=2048,
+                           n_threads=int(os.environ.get("OMP_NUM_THREADS", multiprocessing.cpu_count()/2)))
 
         # setup for automatic batch size detection
         if batch_size == 'auto':
@@ -183,7 +184,8 @@ class LlamaCPPLM(BaseLM):
         return torch.device("cpu")
 
     def tok_encode(self, string: str):
-        return self.model.tokenize(string.encode("utf-8"))
+        tokens = self.model.tokenize(string.encode("utf-8"))
+        return tokens[1:]  # Remove the special token at the very beginning
 
     def tok_decode(self, tokens):
         return self.model.detokenize(tokens)
@@ -196,9 +198,13 @@ class LlamaCPPLM(BaseLM):
         returns: a torch tensor of shape [batch, sequence, vocab] with the
         logits returned from the model
         """
+        # import time
+        # start = time.time()
         self.model.reset()
         self.model.eval(inps.tolist()[0])
         res = self.model.all_logits
+        # end = time.time()
+        # print("Eval time: {}s".format(end - start))
         return torch.Tensor([res])
 
     def _model_generate(self, context, max_length, eos_token_id):
