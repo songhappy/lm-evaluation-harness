@@ -179,7 +179,7 @@ class BaseLM(LM):
             else:
                 context_enc = self.tok_encode(context)
 
-            continuation_enc = self.tok_encode(continuation)
+            continuation_enc = self.tok_encode(continuation)#[1:]  # Remove the first space token in continuation when running with LlamaTokenizer to get better accuracy
 
             new_reqs.append(((context, continuation), context_enc, continuation_enc))
 
@@ -694,7 +694,7 @@ class MultipleChoiceTask(Task):
 
     def construct_requests(self, doc, ctx):
         lls = [
-            rf.loglikelihood(ctx, " {}".format(choice))[0] for choice in doc["choices"]
+            rf.loglikelihood(ctx, " {}".format(choice))[0] for choice in doc["choices"]   # Would be a space here for continuation
         ]
 
         return lls

@@ -76,7 +76,7 @@ class Winogrande(Task):
     def partial_target(cls, doc):
         # The target is everything after the document specified pronoun.
         pronoun_loc = doc["sentence"].index("_") + 1
-        return " " + doc["sentence"][pronoun_loc:].strip()
+        return " " + doc["sentence"][pronoun_loc:].strip()  # Would be a space here for continuation
 
     def construct_requests(self, doc, ctx):
         """Uses RequestFactory to construct Requests and returns an iterable of
