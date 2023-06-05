@@ -148,11 +148,17 @@ class LlamaCPPLM(BaseLM):
 
         import os
         import multiprocessing
-        from llama_cpp import Llama
         # TODO: config n_ctx and n_batch
-        self.model = Llama(model_path=pretrained, logits_all=True,
-                           n_ctx=2048,  # n_batch=2048,
-                           n_threads=int(os.environ.get("OMP_NUM_THREADS", multiprocessing.cpu_count()/2)))
+        if "neox" in pretrained:
+            from gptneox_cpp import Gptneox
+            self.model = Gptneox(pretrained, use_mmap=False, logits_all=True,
+                                 n_ctx=2048,  # n_batch=2048,
+                                 n_threads=int(os.environ.get("OMP_NUM_THREADS", multiprocessing.cpu_count()/2)))
+        else:
+            from llama_cpp import Llama
+            self.model = Llama(model_path=pretrained, logits_all=True,
+                               n_ctx=2048,  # n_batch=2048,
+                               n_threads=int(os.environ.get("OMP_NUM_THREADS", multiprocessing.cpu_count()/2)))
 
         # setup for automatic batch size detection
         if batch_size == 'auto':
@@ -202,7 +208,10 @@ class LlamaCPPLM(BaseLM):
         # start = time.time()
         self.model.reset()
         self.model.eval(inps.tolist()[0])
-        res = self.model.all_logits
+        if hasattr(self.model, "eval_logits"):
+            res = self.model.eval_logits
+        else:  # Old version
+            res = self.model.all_logits
         # end = time.time()
         # print("Eval time: {}s".format(end - start))
         return torch.Tensor([res])
