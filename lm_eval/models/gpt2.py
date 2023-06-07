@@ -48,7 +48,7 @@ class HFLM(BaseLM):
         self.gpt2.eval()
 
         # AutoTokenizer seems loading very slow
-        self.tokenizer = transformers.LlamaTokenizer.from_pretrained(
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             pretrained if tokenizer is None else tokenizer,
             revision=revision,
             trust_remote_code=trust_remote_code,
@@ -159,6 +159,14 @@ class LlamaCPPLM(BaseLM):
             self.model = Llama(model_path=pretrained, logits_all=True,
                                n_ctx=2048,  # n_batch=2048,
                                n_threads=int(os.environ.get("OMP_NUM_THREADS", multiprocessing.cpu_count()/2)))
+        # gptneox int4 tokenizer differs from huggingface tokenizer, which will impact accuracy
+        # TODO: remove hardcode
+        tokenizer_path = "/home/kai/llm/gptneox-7b-redpajama-bf16"
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
+            tokenizer_path if tokenizer is None else tokenizer,
+            revision=revision,
+            trust_remote_code=trust_remote_code,
+        )
 
         # setup for automatic batch size detection
         if batch_size == 'auto':
@@ -190,8 +198,9 @@ class LlamaCPPLM(BaseLM):
         return torch.device("cpu")
 
     def tok_encode(self, string: str):
-        tokens = self.model.tokenize(string.encode("utf-8"))
-        return tokens[1:]  # Remove the special token at the very beginning
+        # tokens = self.model.tokenize(string.encode("utf-8"))
+        # return tokens[1:]  # Remove the special token at the very beginning
+        return self.tokenizer.encode(string, add_special_tokens=False)
 
     def tok_decode(self, tokens):
         return self.model.detokenize(tokens)

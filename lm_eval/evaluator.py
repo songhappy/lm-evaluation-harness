@@ -273,9 +273,9 @@ def evaluate(
 
     # Compare results
     # import pickle
-    # with open('log_probs.pkl', 'wb') as f:
+    # with open('log_probs_fp32.pkl', 'wb') as f:
     #     pickle.dump(process_res_queue, f)
-    # with open('correctness.pkl', 'wb') as f:
+    # with open('correctness_fp32.pkl', 'wb') as f:
     #     pickle.dump(vals, f)
     # aggregate results
     for (task_name, metric), items in vals.items():
