@@ -224,6 +224,10 @@ class HuggingFaceAutoLM(BaseLM):
             offload_folder=offload_folder,
             torch_dtype=torch_dtype,
         )
+        import sys
+        print("type of model", model.dtype)
+        print("size of model", sys.getsizeof(model))
+        print("after loading huggingface model")
         return model
         
     def _create_auto_model_peft(
